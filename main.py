@@ -1,79 +1,87 @@
 import streamlit as st
-import pandas as pd
-import altair as alt
 
-# =======================
-# 앱 설정
-# =======================
-st.set_page_config(page_title="🌟 MBTI 직업/취미 추천", layout="wide")
-st.title("🎨 MBTI 기반 직업 & 취미 추천 웹앱")
-st.markdown("MBTI 유형을 선택하면 추천 직업, 취미, 특징을 확인하고, 직업과 취미 분포 그래프도 볼 수 있어요! 😊")
+# MBTI 데이터 사전
+mbti_info = {
+    "INTJ": {
+        "직업": ["전략기획가", "소프트웨어 개발자", "데이터 과학자"],
+        "취미": ["독서", "체스", "프로그래밍"]
+    },
+    "INTP": {
+        "직업": ["연구원", "시스템 분석가", "이론물리학자"],
+        "취미": ["퍼즐 맞추기", "철학 토론", "코딩"]
+    },
+    "ENTJ": {
+        "직업": ["경영 컨설턴트", "변호사", "기업가"],
+        "취미": ["리더십 워크숍 참여", "토론", "비즈니스 사례 분석"]
+    },
+    "ENTP": {
+        "직업": ["광고 기획자", "정책 분석가", "벤처 창업가"],
+        "취미": ["아이디어 브레인스토밍", "즉흥 연기", "토론"]
+    },
+    "INFJ": {
+        "직업": ["상담가", "작가", "교사"],
+        "취미": ["글쓰기", "명상", "봉사 활동"]
+    },
+    "INFP": {
+        "직업": ["예술가", "심리상담사", "시나리오 작가"],
+        "취미": ["시 쓰기", "음악 감상", "드로잉"]
+    },
+    "ENFJ": {
+        "직업": ["교육자", "사회복지사", "HR 매니저"],
+        "취미": ["사람들과의 대화", "자원봉사", "자기계발"]
+    },
+    "ENFP": {
+        "직업": ["마케팅 전문가", "작가", "공연 예술가"],
+        "취미": ["여행", "댄스", "사진"]
+    },
+    "ISTJ": {
+        "직업": ["회계사", "법률 보조원", "관리자"],
+        "취미": ["정리정돈", "문서 작성", "퍼즐"]
+    },
+    "ISFJ": {
+        "직업": ["간호사", "교사", "사서"],
+        "취미": ["베이킹", "공예", "가족 돌보기"]
+    },
+    "ESTJ": {
+        "직업": ["경찰관", "군인", "프로젝트 매니저"],
+        "취미": ["스포츠 관람", "조직 활동", "목공"]
+    },
+    "ESFJ": {
+        "직업": ["이벤트 플래너", "간호사", "고객 서비스 관리자"],
+        "취미": ["파티 기획", "사교 활동", "플로리스트"]
+    },
+    "ISTP": {
+        "직업": ["기계공", "파일럿", "응급 구조사"],
+        "취미": ["자동차 정비", "등산", "DIY"]
+    },
+    "ISFP": {
+        "직업": ["디자이너", "사진작가", "물리치료사"],
+        "취미": ["사진 찍기", "음악 연주", "산책"]
+    },
+    "ESTP": {
+        "직업": ["영업사원", "기업가", "스턴트맨"],
+        "취미": ["스카이다이빙", "스포츠", "게임"]
+    },
+    "ESFP": {
+        "직업": ["배우", "이벤트 코디네이터", "퍼포머"],
+        "취미": ["댄스", "노래", "모임 참석"]
+    }
+}
 
-# =======================
-# 사이드바: MBTI 선택 + CSV 업로드
-# =======================
-st.sidebar.header("설정")
-uploaded_file = st.sidebar.file_uploader("CSV 파일 업로드 (선택)", type="csv")
+# Streamlit 앱 제목
+st.title("MBTI 기반 직업 & 취미 추천")
 
-# =======================
-# CSV 데이터 불러오기 / 샘플 데이터
-# =======================
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
-    df.columns = df.columns.str.strip()
-    st.sidebar.success("CSV 업로드 완료!")
-else:
-    # 샘플 데이터 (직업/취미 빈도 차이 있음)
-    df = pd.DataFrame({
-        "MBTI":["INTJ","INTJ","INTJ","INTJ","ENFP","ENFP","ENFP","ISTP","ISTP","ENTJ","ENTJ","ISFJ","ISFJ","ISFJ"],
-        "직업":["연구원","연구원","소프트웨어 엔지니어","연구원","디자이너","디자이너","마케팅 전문가",
-               "기계 엔지니어","파일럿","경영 컨설턴트","변호사","간호사","교사","간호사"],
-        "취미":["독서","독서","프로그래밍","독서","그림 그리기","그림 그리기","여행",
-               "자동차 수리","등산","체스","토론","정원 가꾸기","독서","정원 가꾸기"],
-        "설명":["창의적 분석","창의적 분석","논리적 사고","창의적 분석","창의적 활동","창의적 활동","사람 중심",
-               "실용적 활동","도전적 성향","리더십","논리적 설득","배려","책임감","배려"]
-    })
-    st.sidebar.info("CSV 없으면 샘플 데이터로 실행됩니다.")
+# 사용자 입력 받기
+mbti_selected = st.selectbox("당신의 MBTI를 선택하세요:", options=list(mbti_info.keys()))
 
-# MBTI 컬럼 자동 감지
-possible_mbti_cols = ['MBTI', 'Mbti', 'mbti', 'Type', 'type']
-mbti_col = next((col for col in possible_mbti_cols if col in df.columns), None)
-
-if mbti_col is None:
-    st.error("CSV에 MBTI 컬럼이 없습니다. 컬럼명을 확인해주세요.")
-else:
-    # MBTI 선택
-    mbti_options = df[mbti_col].unique()
-    selected_mbti = st.sidebar.selectbox("MBTI 유형 선택", mbti_options)
-
-    # MBTI별 데이터 필터링
-    mbti_data = df[df[mbti_col]==selected_mbti]
-
-    # =======================
-    # 추천 내용 표시
-    # =======================
-    st.subheader(f"💡 {selected_mbti} 유형 특징 및 추천")
-    for idx, row in mbti_data.iterrows():
-        st.markdown(f"🎯 **직업:** {row['직업']}  |  🎨 **취미:** {row['취미']}  |  💡 **특징:** {row['설명']}")
-
-    # =======================
-    # 직업 분포 그래프
-    # =======================
-    if '직업' in mbti_data.columns:
-        job_chart = alt.Chart(mbti_data).mark_bar(color="#FF6F61").encode(
-            x=alt.X('직업', sort='-y'),
-            y='count()',
-            tooltip=['직업','count()']
-        ).properties(title=f"{selected_mbti} 직업 추천 그래프")
-        st.altair_chart(job_chart, use_container_width=True)
-
-    # =======================
-    # 취미 분포 그래프
-    # =======================
-    if '취미' in mbti_data.columns:
-        hobby_chart = alt.Chart(mbti_data).mark_bar(color="#6A5ACD").encode(
-            x=alt.X('취미', sort='-y'),
-            y='count()',
-            tooltip=['취미','count()']
-        ).properties(title=f"{selected_mbti} 취미 추천 그래프")
-        st.altair_chart(hobby_chart, use_container_width=True)
+# 추천 결과 출력
+if mbti_selected:
+    st.subheader(f"🔍 {mbti_selected} 유형 추천")
+    
+    st.markdown("**추천 직업:**")
+    for job in mbti_info[mbti_selected]["직업"]:
+        st.write(f"- {job}")
+    
+    st.markdown("**추천 취미:**")
+    for hobby in mbti_info[mbti_selected]["취미"]:
+        st.write(f"- {hobby}")
