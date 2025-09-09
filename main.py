@@ -7,7 +7,7 @@ import altair as alt
 # =======================
 st.set_page_config(page_title="🌟 MBTI 직업/취미 추천", layout="wide")
 st.title("🎨 MBTI 기반 직업 & 취미 추천 웹앱")
-st.markdown("MBTI 유형을 선택하면 추천 직업, 취미, 특징을 확인하고, 직업 분포 그래프도 볼 수 있어요! 😊")
+st.markdown("MBTI 유형을 선택하면 추천 직업, 취미, 특징을 확인하고, 직업과 취미 분포 그래프도 볼 수 있어요! 😊")
 
 # =======================
 # 사이드바: MBTI 선택 + CSV 업로드
@@ -15,23 +15,23 @@ st.markdown("MBTI 유형을 선택하면 추천 직업, 취미, 특징을 확인
 st.sidebar.header("설정")
 uploaded_file = st.sidebar.file_uploader("CSV 파일 업로드 (선택)", type="csv")
 
-# 샘플 MBTI 유형 선택
-default_mbti = ["INTJ","ENFP","ISTP","ENTJ","ISFJ"]
-
 # =======================
-# CSV 데이터 불러오기
+# CSV 데이터 불러오기 / 샘플 데이터
 # =======================
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    df.columns = df.columns.str.strip()  # 컬럼 공백 제거
+    df.columns = df.columns.str.strip()
     st.sidebar.success("CSV 업로드 완료!")
 else:
-    # 샘플 데이터
+    # 샘플 데이터 (직업/취미 빈도 차이 있음)
     df = pd.DataFrame({
-        "MBTI":["INTJ","INTJ","ENFP","ENFP","ISTP","ISTP","ENTJ","ENTJ","ISFJ","ISFJ"],
-        "직업":["연구원","소프트웨어 엔지니어","디자이너","마케팅 전문가","기계 엔지니어","파일럿","경영 컨설턴트","변호사","간호사","교사"],
-        "취미":["독서","프로그래밍","그림 그리기","여행","자동차 수리","등산","체스","토론","정원 가꾸기","독서"],
-        "설명":["창의적 분석","논리적 사고","창의적 활동","사람 중심","실용적 활동","도전적 성향","리더십","논리적 설득","배려","책임감"]
+        "MBTI":["INTJ","INTJ","INTJ","INTJ","ENFP","ENFP","ENFP","ISTP","ISTP","ENTJ","ENTJ","ISFJ","ISFJ","ISFJ"],
+        "직업":["연구원","연구원","소프트웨어 엔지니어","연구원","디자이너","디자이너","마케팅 전문가",
+               "기계 엔지니어","파일럿","경영 컨설턴트","변호사","간호사","교사","간호사"],
+        "취미":["독서","독서","프로그래밍","독서","그림 그리기","그림 그리기","여행",
+               "자동차 수리","등산","체스","토론","정원 가꾸기","독서","정원 가꾸기"],
+        "설명":["창의적 분석","창의적 분석","논리적 사고","창의적 분석","창의적 활동","창의적 활동","사람 중심",
+               "실용적 활동","도전적 성향","리더십","논리적 설득","배려","책임감","배려"]
     })
     st.sidebar.info("CSV 없으면 샘플 데이터로 실행됩니다.")
 
@@ -68,7 +68,7 @@ else:
         st.altair_chart(job_chart, use_container_width=True)
 
     # =======================
-    # 취미 분포 그래프 (추가)
+    # 취미 분포 그래프
     # =======================
     if '취미' in mbti_data.columns:
         hobby_chart = alt.Chart(mbti_data).mark_bar(color="#6A5ACD").encode(
